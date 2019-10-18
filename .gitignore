@@ -1,0 +1,5 @@
+.snakemake/
+external_data/
+logs/
+processed_data/
+cases.list
