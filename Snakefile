@@ -4,7 +4,8 @@ from pathlib import Path
 
 CASE_LIST_PTH = 'cases.list'
 BAM_MAP_PTH = '/home/mwyczalk_test/Projects/CPTAC3/CPTAC3.catalog/katmai.BamMap.dat'
-STAR_GTF = '/diskmnt/Datasets/Reference/GDC/gencode.v22.annotation.gtf'
+GENE_GTF_PTH = '/diskmnt/Datasets/Reference/GDC/gencode.v22.annotation.gtf'
+GENE_INFO_PTH = '/diskmnt/Datasets/Reference/GDC/gencode.gene.info.v22.tsv'
 
 # Read all the cases to process
 CASES = set()
@@ -65,7 +66,7 @@ rule featurecounts_stranded_readcount:
            bai='external_data/gdc_bam/{sample}.bam.bai',
     log: 'logs/featurecounts_stranded/{sample}.log'
     params:
-        gtf=STAR_GTF
+        gtf=GENE_GTF_PTH
     resources:
         io_heavy=1
     threads: 8
@@ -84,31 +85,42 @@ rule featurecounts_stranded_readcount:
 
 rule compress_featurecounts:
     """Shrink and compress featureCounts output."""
-    output: 'processed_data/featurecounts_{strandness}_readcount/{name}.tsv.gz'
-    input: 'processed_data/featurecounts_{strandness}_readcount/{name}.tsv'
+    output: 'processed_data/featurecounts_stranded_readcount/{sample}.tsv.gz'
+    input: 'processed_data/featurecounts_stranded_readcount/{sample}.tsv'
     shell: 'python shrink_featurecounts.py {input} | gzip -9 -c > {output}'
 
 
 rule all_featurecounts_stranded_readcount:
     input:
-        counts=expand(rules.featurecounts_stranded_readcount.output.count_tsv + '.gz', \
-                      sample=SAMPLES)
+        counts=expand(rules.compress_featurecounts.output[0], sample=SAMPLES)
+
+
+rule generate_fpkm:
+    """Generate FPKM and FPKM-UQ from the readcount."""
+    output: fpkm='processed_data/readcount_and_fpkm/{sample}.tsv.gz'
+    input: rc=rules.compress_featurecounts.output[0],
+           gene_info=GENE_INFO_PTH
+    shell: 'python gen_fpkm.py {input.gene_info} {input.rc} {output.fpkm}'
+
+
+rule all_fpkms:
+    input: fpkms=expand(rules.generate_fpkm.output.fpkm, sample=SAMPLES)
 
 
 rule make_analysis_summary:
-    input: counts=rules.all_featurecounts_stranded_readcount.input['counts']
+    input: rules.all_fpkms.input.fpkms
     output: analysis_summary='processed_data/analysis_summary.dat'
     run:
         with open(output.analysis_summary, 'w') as f:
             writer = csv.writer(f, dialect='excel-tab', lineterminator='\n')
             # Write column header
-            cols = ['# case', 'disease', 'file_path', 'file_format', 
+            cols = ['# case', 'disease', 'file_path', 'file_format',
                     'sample_type', 'sample_name', 'sample_uuid']
             writer.writerow(cols)
 
             for sample, sample_uuid in SAMPLES.items():
                 case, sample_type, disease = SAMPLE_INFO[sample]
-                count_tsv_pth = Path((rules.featurecounts_stranded_readcount.output.count_tsv + '.gz')
+                count_tsv_pth = Path(rules.generate_fpkm.output.fpkm
                                      .format(sample=sample)).resolve(strict=True)
                 writer.writerow([case, disease, count_tsv_pth.as_posix(), 'TSV',
                                  sample_type, sample, sample_uuid])
