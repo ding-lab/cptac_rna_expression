@@ -64,8 +64,10 @@ rule featurecounts_stranded_readcount:
     params:
         gtf=GENE_GTF_PTH
     resources:
-        io_heavy=1
+        io_heavy=1,
+        mem_mb=8192
     threads: 8
+    group: "featurecounts"
     shell:
         'featureCounts '
         '-g gene_id '  # feature id (-i in htseq)
@@ -84,6 +86,7 @@ rule compress_featurecounts:
     output: 'featurecounts_stranded_readcount/{sample}.tsv.gz'
     input: rules.featurecounts_stranded_readcount.output.count_tsv
     shell: 'python shrink_featurecounts.py {input} | gzip -9 -c > {output}'
+    group: "featurecounts"
 
 
 rule generate_fpkm:

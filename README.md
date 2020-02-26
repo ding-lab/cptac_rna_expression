@@ -36,8 +36,8 @@ Create a conda environment for all the dependencies:
 
     conda create -n cptac_expression \
         python=3.7 \
-        snakemake-minimal=5.7.0 \
-        pandas=0.25.1 \
+        snakemake-minimal=5.10.0 \
+        pandas=1.0.1 \
         samtools=1.9 htslib=1.9 \
         subread=1.6.4
 
