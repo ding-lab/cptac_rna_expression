@@ -1,6 +1,5 @@
 import argparse
 import csv
-import gzip
 from pathlib import Path
 
 
@@ -26,5 +25,3 @@ if __name__ == '__main__':
     parser.add_argument('tsv', help="Path to featureCounts tsv")
     args = parser.parse_args()
     main(args)
-
-
