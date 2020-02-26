@@ -14,5 +14,4 @@ RUN conda config --add channels defaults \
         pandas=0.25.1 \
         samtools=1.9 htslib=1.9 \
         subread=1.6.4 \
-        ncdu \
     && conda clean -y --all
