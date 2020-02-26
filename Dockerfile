@@ -10,8 +10,8 @@ RUN conda config --add channels defaults \
     && conda config --add channels bioconda \
     && conda config --add channels conda-forge \
     && conda install -y python=3.7 \
-        snakemake-minimal=5.7.0 \
-        pandas=0.25.1 \
+        snakemake-minimal=5.10.0 \
+        pandas=1.0.1 \
         samtools=1.9 htslib=1.9 \
         subread=1.6.4 \
     && conda clean -y --all
