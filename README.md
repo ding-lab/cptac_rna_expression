@@ -43,18 +43,28 @@ Create a conda environment for all the dependencies:
 
 
 ## Pipeline execution
-First, create a `cases.list` to contain all the CPTAC case IDs to run the pipeline. All samples with GDC aligned genomic RNA-Seq BAM of a listed case will be processed.
 
-Once the case list is available, run the following steps. Change `$NCPUS` to the suitable number for maximal CPU usage.
+    # Set the batch name
+    export BATCH="2020-02-25_PDA"
 
-    # Link all RNA-seq BAMs
-    snakemake link_gdc_rna_bams
+    cd /storage1/fs1/path/to/rna_expression_pipeline/
 
-    # Run featureCounts
-    snakemake -j $NCPUS --resources io_heavy=8 -- all_featurecounts_stranded_readcount
+    # Create the batch folder
+    mkdir $BATCH
 
-    # Run read count to FPKM conversion
-    snakemake -j $NCPUS -- all_fpkms
+    # Create samples.list. For example,
+    cut -f2 CPTAC3.catalog/BamMap/compute1.BamMap.dat | tail +2 > samples.list
 
-    # Generate summary dat
-    snakemake make_analysis_summary
+    # Cache the BAM map
+    cp CPTAC3.catalog/BamMap/compute1.BamMap.dat compute1.BamMap.cptac3_catalog_commit_6509b69.dat
+
+    # Create snakemake_config.json
+    {
+        "sample_list": "samples.list",
+        "bam_map": "compute1.BamMap.cptac3_catalog_commit_6509b69.dat",
+        "gdc_gtf": "../annotations/gencode.v22.annotation.gtf",
+        "gdc_gene_info": "../annotations/gencode.gene.info.v22.tsv",
+    }
+
+    # Run the pipeline
+    bash run.sh

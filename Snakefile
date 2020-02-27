@@ -8,7 +8,7 @@ SAMPLE_LIST_PTH = config['sample_list']
 BAM_MAP_PTH = config['bam_map']
 GENE_GTF_PTH = config['gdc_gtf']  # gencode.v22.annotation.gtf
 GENE_INFO_PTH = config['gdc_gene_info']  # gencode.gene.info.v22.tsv
-
+WORKFLOW_ROOT = config['workflow_root']
 REPLACE_BAM_PTH = config.get('replace_bam_path', None)
 
 _logger = logging.getLogger(__name__)
@@ -85,8 +85,9 @@ rule compress_featurecounts:
     """Shrink and compress featureCounts output."""
     output: 'featurecounts_stranded_readcount/{sample}.tsv.gz'
     input: rules.featurecounts_stranded_readcount.output.count_tsv
-    shell: 'python shrink_featurecounts.py {input} | gzip -9 -c > {output}'
+    threads: 2
     group: "featurecounts"
+    shell: 'python {WORKFLOW_ROOT}/shrink_featurecounts.py {input} | gzip -9 -c > {output}'
 
 
 rule generate_fpkm:
@@ -94,7 +95,7 @@ rule generate_fpkm:
     output: fpkm='readcount_and_fpkm/{sample}.tsv.gz'
     input: rc=rules.compress_featurecounts.output[0],
            gene_info=GENE_INFO_PTH
-    shell: 'python gen_fpkm.py {input.gene_info} {input.rc} {output.fpkm}'
+    shell: 'python {WORKFLOW_ROOT}/gen_fpkm.py {input.gene_info} {input.rc} {output.fpkm}'
 
 
 rule all_featurecounts_stranded_readcount:
@@ -113,8 +114,8 @@ rule make_analysis_summary:
         with open(output.analysis_summary, 'w') as f:
             writer = csv.writer(f, dialect='excel-tab', lineterminator='\n')
             # Write column header
-            cols = ['# case', 'disease', 'file_path', 'file_format',
-                    'sample_name', 'sample_uuid']
+            cols = ['# sample_name', 'case', 'disease',
+                    'file_path', 'file_format', 'sample_uuid']
             writer.writerow(cols)
 
             for sample, info in SAMPLE_INFO.items():
@@ -122,7 +123,7 @@ rule make_analysis_summary:
                     rules.generate_fpkm.output.fpkm.format(sample=sample)
                 ).resolve(strict=True)
                 writer.writerow([
-                    info.case, info.disease,
+                    sample, info.case, info.disease,
                     str(count_tsv_pth), 'TSV',
-                    sample, info.uuid
+                    info.uuid
                 ])
