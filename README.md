@@ -35,7 +35,7 @@ Use the gene information ([`gencode.gene.info.v22.tsv`][gene-info-tsv]; md5: `0a
 ## Installation
 Use the Docker image on Docker Hub [`lbwang/cptac_rna_expression`][docker-image]. See `Dockerfile` for the specific tool requirements.
 
-[docker-image]: https://hub.docker.com/repository/docker/lbwang/cptac_rna_expression
+[docker-image]: https://hub.docker.com/r/lbwang/cptac_rna_expression
 
 
 ## Pipeline execution
