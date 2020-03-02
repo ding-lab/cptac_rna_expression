@@ -14,9 +14,6 @@ Gene annotation in use is identical to GDC (`gencode.v22.annotation.gtf.gz`; md5
 
 Note that although the gene annotation is identical to GDC, GDC readcount is done in the unstranded mode using HTSeq, so the readcounts by GDC and this pipeline are not identical.
 
-[GDC Reference Files]: https://gdc.cancer.gov/about-data/data-harmonization-and-generation/gdc-reference-files
-[GDC's formula]: https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/#upper-quartile-fpkm
-
 
 ## Output format
 Each sample gets its TSV in the exact same gene order. The output TSV file has the following columns:
@@ -28,34 +25,39 @@ Each sample gets its TSV in the exact same gene order. The output TSV file has t
 | fpkm       | FPKM                        |
 | fpkm_uq    | FPKM-UQ                     |
 
-Use the gene information (`gencode.gene.info.v22.tsv`; md5: `0a3f1d9b0a679e2a426de36d8d74fbf9`) on the [GDC Reference Files] page to get more information about each gene.
+Use the gene information ([`gencode.gene.info.v22.tsv`][gene-info-tsv]; md5: `0a3f1d9b0a679e2a426de36d8d74fbf9`) on the [GDC Reference Files] page to get more information about each gene.
+
+[GDC Reference Files]: https://gdc.cancer.gov/about-data/data-harmonization-and-generation/gdc-reference-files
+[GDC's formula]: https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/#upper-quartile-fpkm
+[gene-info-tsv]: https://api.gdc.cancer.gov/data/b011ee3e-14d8-4a97-aed4-e0b10f6bbe82
 
 
 ## Installation
-Create a conda environment for all the dependencies:
+Use the Docker image on Docker Hub [`lbwang/cptac_rna_expression`][docker-image]. See `Dockerfile` for the specific tool requirements.
 
-    conda create -n cptac_expression \
-        python=3.7 \
-        snakemake-minimal=5.10.0 \
-        pandas=1.0.1 \
-        samtools=1.9 htslib=1.9 \
-        subread=1.6.4
+[docker-image]: https://hub.docker.com/repository/docker/lbwang/cptac_rna_expression
 
 
 ## Pipeline execution
 
-    # Set the batch name
-    export BATCH="2020-02-25_PDA"
+### Run the pipeline on compute1
+Refer to the example at `/storage1/fs1/lding/Active/CPTAC3/Analysis/rna_expression_pipeline/2020-02-25_PDA`.
+
+Create a new batch by:
 
     cd /storage1/fs1/path/to/rna_expression_pipeline/
 
+    # Create a batch name
+    export BATCH="2020-02-25_PDA"
+
     # Create the batch folder
     mkdir $BATCH
+    cd $BATCH
 
     # Create samples.list. For example,
     cut -f2 CPTAC3.catalog/BamMap/compute1.BamMap.dat | tail +2 > samples.list
 
-    # Cache the BAM map
+    # Cache the BAM map, preferably add the current commit hash of CPTAC3.catalog in the file name.
     cp CPTAC3.catalog/BamMap/compute1.BamMap.dat compute1.BamMap.cptac3_catalog_commit_6509b69.dat
 
     # Create snakemake_config.json
@@ -64,7 +66,33 @@ Create a conda environment for all the dependencies:
         "bam_map": "compute1.BamMap.cptac3_catalog_commit_6509b69.dat",
         "gdc_gtf": "../annotations/gencode.v22.annotation.gtf",
         "gdc_gene_info": "../annotations/gencode.gene.info.v22.tsv",
+        "workflow_root": "/storage1/fs1/lding/Active/CPTAC3/Analysis/rna_expression_pipeline/pipeline_workflow"
     }
 
-    # Run the pipeline
+    # Set up the log structure
+    mkdir logs
+    mkdir logs/cluster
+
+    # Copy the bash scripts run.sh and run_master_job.sh
+
+
+Set up the snakemake profile. The default profile is at `/storage1/fs1/lding/Active/CPTAC3/Analysis/rna_expression_pipeline/ris_lsf`. Change the following files if necessary: 
+
+- `config.yaml` controls the number of restart times when the same job is failed and the total number of jobs submitted. 
+- `lsf-submit.py` sets extra LSF options. Note that job group is always required.
+
+    ```python
+    def generate_lsf_command(job_properties: dict, cluster: dict) -> str:
+        # ...
+        # RIS compute1 commands
+        queue = "general"
+        job_grp = "/liang-bo.wang/cptac_rna"
+        docker_img = "lbwang/cptac_rna_expression"
+        # ...
+    ```
+
+If a new snakemake profile is used, modify `run_master_job.sh` to point to the new profile.
+
+Run the pipeline by:
+
     bash run.sh
