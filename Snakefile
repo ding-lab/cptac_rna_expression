@@ -65,8 +65,8 @@ rule featurecounts_stranded_readcount:
         gtf=GENE_GTF_PTH
     resources:
         io_heavy=1,
-        mem_mb=8192
-    threads: 8
+        mem_mb=lambda wildcards, attempt: 16000 + 16000 * (attempt - 1)
+    threads: 16
     group: "featurecounts"
     shell:
         'featureCounts '
