@@ -114,8 +114,9 @@ rule make_analysis_summary:
         with open(output.analysis_summary, 'w') as f:
             writer = csv.writer(f, dialect='excel-tab', lineterminator='\n')
             # Write column header
-            cols = ['# sample_name', 'case', 'disease',
-                    'file_path', 'file_format', 'sample_uuid']
+            cols = ['# case', 'disease',
+                    'data_path', 'file_format',
+                    'sample_name', 'sample_uuid']
             writer.writerow(cols)
 
             for sample, info in SAMPLE_INFO.items():
@@ -123,7 +124,7 @@ rule make_analysis_summary:
                     rules.generate_fpkm.output.fpkm.format(sample=sample)
                 ).resolve(strict=True)
                 writer.writerow([
-                    sample, info.case, info.disease,
+                    info.case, info.disease,
                     str(count_tsv_pth), 'TSV',
-                    info.uuid
+                    sample, info.uuid
                 ])
