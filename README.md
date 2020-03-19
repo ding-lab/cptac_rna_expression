@@ -39,6 +39,52 @@ Use the Docker image on Docker Hub [`lbwang/cptac_rna_expression`][docker-image]
 
 
 ## Pipeline execution
+Clone this repository as `pipeline_workflow`:
+
+    git clone https://github.com/ding-lab/cptac_rna_expression pipeline_workflow
+
+The folder structure should be
+
+    <root>
+    - pipeline_workflow
+    - <batch1>
+    - <batch2>
+
+
+### Run the pipeline on katmai
+
+Create the conda environment if not available:
+
+    conda create -n cptac_expression python=3.7 \
+        snakemake-minimal=5.10.0 \
+        pandas=1.0.1 \
+        samtools=1.9 htslib=1.9 \
+        subread=1.6.4
+
+Create a new batch folder, say `cptac2_prospective`:
+
+    mkdir cptac2_prospective
+
+Create `snakemake_config.json`:
+
+```json
+{
+    "sample_list": "samples.list",
+    "bam_map": "bammap.converted.tsv",
+    "gdc_gtf": "/diskmnt/Datasets/Reference/GDC/gencode.v22.annotation.gtf",
+    "gdc_gene_info": "/diskmnt/Datasets/Reference/GDC/gencode.gene.info.v22.tsv",
+    "workflow_root": "/diskmnt/Projects/cptac_scratch/CPTAC_expression/pipeline_workflow"
+}
+```
+
+Run the full pipeline by:
+
+    snakemake \
+        --configfile=snakemake_config.json \
+        -s ../pipeline_workflow/Snakefile \
+        -j 50 --resources io_heavy=4 -- \
+        make_analysis_summary
+
 
 ### Run the pipeline on compute1
 Refer to the example at `/storage1/fs1/lding/Active/CPTAC3/Analysis/rna_expression_pipeline/2020-02-25_PDA`.
