@@ -4,11 +4,15 @@ from textwrap import dedent
 from pathlib import Path
 import logging
 
+# List of sample names to run the pipeline
 SAMPLE_LIST_PTH = config['sample_list']
+# The mapping of sample name to other information.
 BAM_MAP_PTH = config['bam_map']
 GENE_GTF_PTH = config['gdc_gtf']  # gencode.v22.annotation.gtf
 GENE_INFO_PTH = config['gdc_gene_info']  # gencode.gene.info.v22.tsv
-WORKFLOW_ROOT = config['workflow_root']
+WORKFLOW_ROOT = config['workflow_root']  # Path to this repository
+# A [src_part, dst_part] to replace the file path of the BAM path
+# Useful to change the BAM map in Docker
 REPLACE_BAM_PTH = config.get('replace_bam_path', None)
 
 _logger = logging.getLogger(__name__)
@@ -20,8 +24,10 @@ if len(SAMPLES) != len(set(SAMPLES)):
     _logger.error('There are duplicated samples in the sample list!')
 SAMPLES = set(SAMPLES)
 
-# Select all the available samples of the selected cases
-# sample_name -> (case, sample_type, disease, UUID, BAM_src_path)
+
+# Select all the available samples of the selected cases.
+# SAMPLE_INFO is a mapping of:
+#   sample_name -> SampleInfo(case, sample_type, disease, UUID, BAM_src_path)
 SampleInfo = namedtuple('SampleInfo', 'case, disease, uuid, bam_pth')
 SAMPLE_INFO = {}
 with open(BAM_MAP_PTH) as f:
