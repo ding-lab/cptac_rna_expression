@@ -102,6 +102,12 @@ Create `snakemake_config.json`:
 }
 ```
 
+Copy the bam map (usually from Matt's CPTAC3.catalog):
+
+    rsync -a --info=progress2 \
+        katmai.BamMap.dat \
+        katmai:<batch_location>/katmai.BamMap.cptac3_catalog_commit_$(git rev-parse --short HEAD).dat
+
 Run the full pipeline by:
 
     snakemake \
@@ -147,9 +153,9 @@ Create a new batch by:
     # Copy the bash scripts run.sh and run_master_job.sh
 
 
-Set up the snakemake profile. The default profile is at `/storage1/fs1/lding/Active/CPTAC3/Analysis/rna_expression_pipeline/ris_lsf`. Change the following files if necessary: 
+Set up the snakemake profile. The default profile is at `/storage1/fs1/lding/Active/CPTAC3/Analysis/rna_expression_pipeline/ris_lsf`. Change the following files if necessary:
 
-- `config.yaml` controls the number of restart times when the same job is failed and the total number of jobs submitted. 
+- `config.yaml` controls the number of restart times when the same job is failed and the total number of jobs submitted.
 - `lsf-submit.py` sets extra LSF options. Note that job group is always required.
 
     ```python
