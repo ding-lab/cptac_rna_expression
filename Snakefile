@@ -120,7 +120,7 @@ rule make_analysis_summary:
         with open(output.analysis_summary, 'w') as f:
             writer = csv.writer(f, dialect='excel-tab', lineterminator='\n')
             # Write column header
-            cols = ['# case', 'disease',
+            cols = ['# run_name', 'case', 'disease',
                     'data_path', 'file_format',
                     'sample_name', 'sample_uuid']
             writer.writerow(cols)
@@ -130,7 +130,8 @@ rule make_analysis_summary:
                     rules.generate_fpkm.output.fpkm.format(sample=sample)
                 ).resolve(strict=True)
                 writer.writerow([
-                    info.case, info.disease,
+                    # sample name is unique to be run name
+                    sample, info.case, info.disease,
                     str(count_tsv_pth), 'TSV',
                     sample, info.uuid
                 ])
