@@ -78,13 +78,15 @@ The folder structure should be:
 
 ### Run the pipeline on katmai
 
-Create the conda environment if not available:
+Create the conda environment if not available (assuming [bioconda] is configured):
 
     conda create -n cptac_expression python=3.7 \
         snakemake-minimal=5.10.0 \
         pandas=1.0.1 \
         samtools=1.9 htslib=1.9 \
         subread=1.6.4
+
+[bioconda]: https://bioconda.github.io/index.html
 
 Create a new batch folder, say `cptac2_prospective`:
 
